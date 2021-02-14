@@ -4,6 +4,10 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+build = "*"
+twine = "*"
+flake8 = "*"
+pytest = "*"
 
 [packages]
 click = "*"

@@ -1,7 +1,6 @@
 from subprocess import run, PIPE, STDOUT
 import os
 import json
-import logging
 
 import click
 
@@ -9,11 +8,11 @@ MFA_PROFILE = os.environ.get("AWS_MFA_PROFILE", "mfa-profile")
 
 
 def get_config(key, profile):
-    result = run(["aws", "configure", "--profile", profile, "get", key], capture_output=True, text=True)
+    result = run(["aws", "configure", "--profile", profile, "get", key], stdout=PIPE, stderr=STDOUT)
     if result.returncode != 0:
         click.echo(result.stdout)
         raise click.Abort()
-    return result.stdout.strip()
+    return result.stdout.decode("UTF-8").strip()
 
 
 def set_config(key, value, profile):
@@ -29,7 +28,7 @@ def get_session_token(mfa_device, token):
             "aws", "sts", "get-session-token",
             "--serial-number", mfa_device, "--token-code", token
         ],
-        stdout=PIPE, stderr=STDOUT, text=True
+        stdout=PIPE, stderr=STDOUT
     )
     if result.returncode != 0:
         click.echo(result.stdout)
@@ -93,7 +92,9 @@ def token(code, device):
         device = get_config("aws_mfa_device", MFA_PROFILE)
     click.echo(f"Logging in with token code {code} from MFA device {device}")
     credentials = get_session_token(device, code)
+    click.echo()
     click.echo(credentials)
+    click.echo()
     set_mfa_credentials(
         credentials["access_key_id"],
         credentials["secret_access_key"],
